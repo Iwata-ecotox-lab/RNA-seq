@@ -1,0 +1,49 @@
+#NCBIよりgtf形式およびfasta形式ファイルのゲノム配列/遺伝子情報のダウンロード (FASTAは".fa"または".fna")
+#上記はQCしたファイルおよびこれからインデックスを作成するディレクトリと同じ場所に保存しておく
+#ちなみにGFFからGTFへの変換は以下のコマンドで可能
+ $ gffread annotation.gff -T -o annotation.gtf
+ 
+
+#STARのインストール（必ずGithubのSTARよりSTARのバージョンを確認しておく）
+# Get latest STAR source from releases
+$ wget https://github.com/alexdobin/STAR/archive/2.7.10a.tar.gz
+$ tar -xzf 2.7.10a.tar.gz
+$ cd STAR-2.7.10a
+
+# Compile
+$ cd STAR-2.7.10a/source
+$ make STAR
+
+########必ず"STAR-2.7.10a/bin/"以下の"Linux_x86_64_static"および"Linux_X86_64",または"MacOSX_x86_64"のPATHを通しておく#######
+#環境変数PATHの表示
+ $ echo $PATH
+#PATHを一時的に追加
+ $ export PATH=$PATH:/mnt/c/users/cmese/Desktop/Kanda/ubun_data/STAR-2.7.10a/bin/Linux_x86_64_static
+ #PATHを永続的に追加（.bashrc）
+ $ export PATH=$PATH:/mnt/c/users/cmese/Desktop/Kanda/ubun_data/STAR-2.7.10a/bin/Linux_x86_64_static/.bashrc
+ 
+ # indexの作成
+ $ STAR --runMode genomeGenerate --runThreadN 8 --genomeDir /mnt/c/users/cmese/Desktop/Kanda/ubun_data --genomeFastaFiles Gallus_gallus.GRCg6a.dna.toplevel.fa --limitGenomeGenerateRAM 15000000000 --sjdbGTFfile /mnt/c/users/cmese/Desktop/Kanda/ubun_data/Gallus_gallus.GRCg6a.104.gtf
+ 
+  #"-runMode"これに"genomeGenerate"を与えることでインデックスを作成できる
+  #"-runThreadN"は使用するスレッド数
+  #"-genomeDir"は出力ファイルが保管されるディレクトリの名前. 後々の実行で使うので、必要十分かつ他のインデックスと重複しない名前をつける。先にディレクトリを作成しておく必要がある.
+  #"-genomeFastaFiles"でリファレンスゲノムのFASTAファイル（.faまたは.fna）の指定
+  #"limitGenomeGenerateRAM"でこのインデックスの作成に割り当てるRAM（メモリ）の量を指定する. できるだけ大きい方が良い.
+  #"-sjdbGTFfile"はGTFファイルの読み込み. これによりスプライスジャンクション（イントロン/エキソンの切れ目）を考慮することができ、マッピングの精度が大幅に上昇する。
+ 
+
+ # Mapping
+ $ STAR --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM --outSAMattributes All --runThreadN 8 --genomeDir /mnt/c/users/cmese/Desktop/Kanda/ubun_data --readFilesIn trim_D5C1_good_out_R1.fastq trim_D5C1_good_out_R2.fastq --outFileNamePrefix /mnt/c/users/cmese/Desktop/Kanda/ubun_data/STAR-2.7.10a/star_D5C1.
+ 
+  #"--outSAMtype BAM SortedByCoordinate"でsort済BAMを出力
+  #"--quantMode TranscriptomeSAM"はRSEMでの発現量推定に必要なオプション
+  #"--runThreadN"は使用CPU数
+  #"--outSAMattributes All"で出力BAMファイルに含まれる情報を最大に
+  #"--genomeDir"でindexファイルを指定
+  #"--readFilesIn"は入力fastq
+  #"--outFfileNamePrefix"は出力ファイル名（最後のピリオドを忘れずに）
+  
+  # Log.final.outではマッピングの詳細な情報が得られる. あまりにもマッピング率が低いようならば見直してみる必要がある.
+ 
+ 
