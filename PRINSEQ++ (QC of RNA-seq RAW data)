@@ -1,0 +1,24 @@
+#参考にしたサイト 
+#https://kimbio.info/prinseqplusplus%e3%81%a7rna-seq%e3%81%aeraw%e3%83%87%e3%83%bc%e3%82%bf%e3%81%aeqc%e3%82%af%e3%82%a9%e3%83%aa%e3%83%86%e3%82%a3%e3%82%b3%e3%83%b3%e3%83%88%e3%83%ad%e3%83%bc%e3%83%ab%e3%82%92/
+
+#PRINSEQ++のインストール
+$ git clone https://github.com/Adrian-Cantu/PRINSEQ-plus-plus.git
+$ cd PRINSEQ-plus plus
+$ ./autogen.sh
+$ ./configure
+$ make
+$ make test
+$ sudo make install
+
+# $ prinseq++ -h　でヘルプの表示ができる
+
+＃ペアエンドリードのQCの実行（圧縮ファイルのままでQCは可能だが、展開後のファイルを読み込ませた方が処理が早い）
+$ prinseq++ -fastq　D5C1_1.fastq -fstq2 D5C1_2.fastq -out_name trim_D5C1 -trim_left 5 -trim_tail_right 5 -trim_qual_right 30 -ns_max_n 20 -min_len 30 -threads 8
+
+  #インプットオプション"-fastq", "-fastq2"でインプットfastqファイルを指定
+  #"-out_name"で出力の際のファイル名を指定. FASTQ形式で出力される.
+  #"-trim_left"でleft方向（5'->3'）からいくつの塩基を削除するか指定
+  #"-trim_tail_left"で3'末端に付加されたポリA/T鎖を削除
+  #"-trim_qual_right"で指定したクォリティ値と比較して5'末端から再帰的に-trim_qual_windowの範囲でクォリティが低い部分を削除
+  #"-ns_ma_n"はリードにおいて指定した値以上Nが出てきたリードは切り捨てるというもの. 
+  #"-threads"は使用するスレッド数の指定
