@@ -1,0 +1,53 @@
+#Bioconductorツールのインストール
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("biomaRt")
+
+
+#biomaRtツールの読み込み
+library(biomaRt)
+
+
+#データの読み込み
+data <- read.table("SeiWhaleGeneExpressionMatrix.TPM.txt", header = T)
+
+
+db <- useMart("ensembl")  #useMart()で参照するデータベースを選択
+listDatasets(db) #()のデータベースに登録されているデータを確認
+
+
+#目的のデータをuseDataset("データ名", mart = "データベース名")で読み込み
+hd <- useDataset("bmusculus_gene_ensembl", mart = db)
+
+head(listFilters(hd))
+head(listAttributes((hd)))
+
+#変換するコマンド: getBM(attributes = "変換先の属性名",filters = "変換元の属性名", values = "変換元", mart = "参照データ")
+#キャッシュの読み込みと書き込みを無効(useCache = FALSE)にしないとエラーが出る
+res <- getBM(attributes = c("ensembl_gene_id","external_gene_name"),
+             filters = "ensembl_gene_id", values = data$ensembl_gene_id,
+             mart = hd, useCache = FALSE)
+#結果の確認
+res
+
+
+#変換元名でソート
+data <- data[order(data$ensembl_gene_id),]
+res <- res[order(res$ensembl_gene_id),]
+
+#dataとresで名前が一致しているか確認
+table_1 <- data[match(data$ensembl_gene_id, res$ensembl_gene_id),]
+table_2 <- res[match(data$ensembl_gene_id, res$ensembl_gene_id),]
+table_1
+table_2
+
+
+#一致を確認後に合体
+output_table <-cbind(table_2, table_1)
+
+
+
+#テーブルを名前を付けて保存
+output_name  <- "SeiWhaleGeneExpressionMatrix_gene"
+output_file        <- paste(output_name, ".csv", sep = "")
+write.csv(output_table, file = output_file)
