@@ -1,0 +1,46 @@
+# RSEMはGitHubからクローンして、makeでコンパイルする。
+
+$ git clone https://github.com/deweylab/RSEM.git
+$cd RSEM
+$ make
+
+
+
+############# RSEMのパスを通す. RSEMディレクトリ直下に実行ファイルがある.##################
+
+$ export PATH=$PATH:/mnt/c/users/cmese/Desktop/Kanda/ubun_data/RSEM
+
+
+
+#RSEM用のインデックス作成
+#NCBIからダウンロードしたgtfファイルを使用する場合、txt.形式に直してgene_idが""という空の状態のものは消す.
+
+$ rsem-prepare-reference --gtf BalAcu1.0_genomic.gtf -p 16 BalAcu1.0_genomic.fna chicken_index
+
+
+
+# STARで出力された"_Aligned.toTranscriptome.out.bam"を使用してRSEMで発現量定量する.
+
+$ SEQLIBS=(SRR7508939 SRR7508940 SRR7508941 SRR7508942 SRR7508943 SRR7508944)
+
+for seqlib in ${SEQLIBS[@]}; do
+    rsem-calculate-expression --alignments --paired-end -p 4 \
+             ${seqlib}_exp_star_Aligned.toTranscriptome.out.bam \
+             TAIR10_RSEM_index \
+             ${seqlib}_rsem
+done
+
+
+
+#発現量データのマージ（TPM) Marge expression data
+
+$ git clone https://github.com/KANDA-Kazuki/script_kanda.git
+$ script_kanda/rsem-generate-data-matrix-modified \
+    TPM \    # count または TPM または FPKM を指定
+    star/Myers_H1-hESC_cell_2x75_200_1.genes.results  \
+    star/Myers_H1-hESC_cell_2x75_200_2.genes.results  \
+    star/Myers_HUVEC_cell_2x75_200_1.genes.results  \
+    star/Myers_HUVEC_cell_2x75_200_2.genes.results  \
+    > GeneExpressionMatrix.TPM.txt
+# 結果を表示
+$ head GeneExpressionMatrix.TPM.txt 
